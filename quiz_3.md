@@ -22,14 +22,20 @@ For steps of size 3, we have:
 4 stairs with 1 step  
 
 ```cpp
-vector<int> findStairs(vector<vector<int>> &matrix, int size) {     //提供一个矩阵matrix，和一个楼梯的size
+//提供一个矩阵matrix，和一个楼梯的size
+vector<int> findStairs(vector<vector<int>> &matrix, int size) {     
 	int l = matrix.size();
-	vector<int> res(l, 0);                                            //保存答案
-	for (int i = 0; i < l - size + 1; ++i) {                          //遍历，注意边界
+	//保存答案
+	vector<int> res(l, 0);                                            
+	//遍历，注意边界
+	for (int i = 0; i < l - size + 1; ++i) {                          
 		for (int j = 0; j < l - 2 * size + 2; ++j) {
-			if (matrix[i][j] == 0 || matrix[i][j] == 2) continue;         //当为零或已作为起始点的时候，跳出到下一点
-			int steps = 0, now_size = size - 1, dir = 0, ni = i, nj = j;  //steps表示步数，now_size
+			//当为零或已作为起始点的时候，跳出到下一点
+			if (matrix[i][j] == 0 || matrix[i][j] == 2) continue;         
+			//steps表示步数，now_size表示横向或纵向移动的步长，dir表示移动的方向(为偶数时向右，为奇数时向下)，ni,nj表示当前坐标
+			int steps = 0, now_size = size - 1, dir = 0, ni = i, nj = j;  
 			while (ni < l && nj < l && matrix[ni][nj] != 0) {
+				//判断是否转向
 				if (now_size == 0) {
 					now_size = size - 1;
 					if (dir == 2) {
@@ -39,6 +45,7 @@ vector<int> findStairs(vector<vector<int>> &matrix, int size) {     //提供一�
 					}
 					else ++dir;
 				}
+				//根据不同方向取得下一位置
 				if (dir == 0) {
 					++nj;
 					--now_size;
@@ -52,6 +59,7 @@ vector<int> findStairs(vector<vector<int>> &matrix, int size) {     //提供一�
 					--now_size;
 				}
 			}
+			//当前步长楼梯数加一
 			++res[steps];
 		}
 	}
