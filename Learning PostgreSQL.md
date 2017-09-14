@@ -64,9 +64,10 @@ SELECT DISTINCT city
     FROM weather;  --DISTINCT可以查询的结果中消除重复的行
 ```
 
+- 在表之间连接
+    
+    类似于拿 weather表每行的city列和cities表所有行的name列进行比较， 并选取那些在该值上相匹配的行对。但这里只是一个概念上的模型。连接通常以比实际比较每个可能的行对更高效的方式执行
 ```sql
---表之间的连接
---类似于拿 weather表每行的city列和cities表所有行的name列进行比较， 并选取那些在该值上相匹配的行对。但这里只是一个概念上的模型。连接通常以比实际比较每个可能的行对更高效的方式执行
 SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,  
     W2.city, W2.temp_lo AS low, W2.temp_hi AS high
 --如果在两个表里有重名的列，你需要限定列名来说明你究竟想要哪一个
@@ -80,18 +81,25 @@ SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,  
 SELECT *
     FROM weather INNER JOIN cities ON (weather.city = cities.name);
 
---如果我们没有找到匹配的行，那么我们需要一些"空值"代替cities表的列。 这种类型的查询叫外连接 （我们在此之前看到的连接都是内连接）
+--如果我们没有找到匹配的行，那么我们需要一些"空值"代替cities表的列。 
+--这种类型的查询叫外连接 （我们在此之前看到的连接都是内连接）
 SELECT *
     FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);  --此为左外连接
-    
---聚集函数
+```
+
+* 聚集函数
+
+    理解聚集和SQL的WHERE以及HAVING子句之间的关系对我们非常重要。WHERE和HAVING的基本区别如下：WHERE在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而HAVING在分组和聚集之后选取分组行。因此，WHERE子句不能包含聚集函数； 因为试图用聚集函数判断哪些行应输入给聚集运算是没有意义的。相反，HAVING子句总是包含聚集函数（严格说来，你可以写不使用聚集的HAVING子句， 但这样做很少有用。同样的条件用在WHERE阶段会更有效）
+```sql
 --例如，行集合上计算count（计数）、sum（和）、avg（均值）、max（最大值）和min（最小值）的函数
 SELECT max(temp_lo) FROM weather;
 SELECT city FROM weather WHERE temp_lo = max(temp_lo);     --错误
---聚集max不能被用于WHERE子句中（存在这个限制是因为WHERE子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）
+--聚集max不能被用于WHERE子句中
+--（存在这个限制是因为WHERE子句决定哪些行可以被聚集计算包括；因此显然它必需在聚集函数之前被计算）
 
 SELECT city FROM weather
-    WHERE temp_lo = (SELECT max(temp_lo) FROM weather);  --可以使用子查询，因为子查询是一次独立的计算，它独立于外层的查询计算出自己的聚集
+    WHERE temp_lo = (SELECT max(temp_lo) FROM weather);  
+--可以使用子查询，因为子查询是一次独立的计算，它独立于外层的查询计算出自己的聚集
     
 SELECT city, max(temp_lo)
     FROM weather
@@ -102,8 +110,10 @@ SELECT city, max(temp_lo)
     WHERE city LIKE 'S%'(1)  --LIKE操作符进行模式匹配
     GROUP BY city
     HAVING max(temp_lo) < 40;
---理解聚集和SQL的WHERE以及HAVING子句之间的关系对我们非常重要。WHERE和HAVING的基本区别如下：WHERE在分组和聚集计算之前选取输入行（因此，它控制哪些行进入聚集计算）， 而HAVING在分组和聚集之后选取分组行。因此，WHERE子句不能包含聚集函数； 因为试图用聚集函数判断哪些行应输入给聚集运算是没有意义的。相反，HAVING子句总是包含聚集函数（严格说来，你可以写不使用聚集的HAVING子句， 但这样做很少有用。同样的条件用在WHERE阶段会更有效）  
+```
 
+* 更新和删除
+```sql
 --更新
 UPDATE weather
     SET temp_hi = temp_hi - 2,  temp_lo = temp_lo - 2
