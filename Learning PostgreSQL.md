@@ -195,3 +195,106 @@ UPDATE accounts SET balance = balance + 100.00
     WHERE name = 'Wally';
 COMMIT;
 ```
+
+- 窗口函数
+
+    一个窗口函数在一系列与当前行有某种关联的表行上执行一种计算。这与一个聚集函数所完成的计算有可比之处。但是与通常的聚集函数不同的是，使用窗口函数并不会导致行被分组成为一个单独的输出行--行保留它们独立的标识。在这些现象背后，窗口函数可以访问的不仅仅是查询结果的当前行。    
+    一个窗口函数调用总是包含一个直接跟在窗口函数名及其参数之后的OVER子句。这使得它从句法上和一个普通函数或聚集函数区分开来。OVER子句决定究竟查询中的哪些行被分离出来由窗口函数处理。OVER子句中的PARTITION BY列表指定了将具有相同PARTITION BY表达式值的行分到组或者分区。对于每一行，窗口函数都会在当前行同一分区的行上进行计算。    
+    一个窗口函数所考虑的行属于那些通过查询的FROM子句产生并通过WHERE、GROUP BY、HAVING过滤的"虚拟表"。例如，一个由于不满足WHERE条件被删除的行是不会被任何窗口函数所见的。在一个查询中可以包含多个窗口函数，每个窗口函数都可以用不同的OVER子句来按不同方式划分数据，但是它们都作用在由虚拟表定义的同一个行集上。    
+    我们已经看到如果行的顺序不重要时ORDER BY可以忽略。PARTITION BY同样也可以被忽略，在这种情况下只会产生一个包含所有行的分区。    
+    这里有一个与窗口函数相关的重要概念：对于每一行，在它的分区中的行集被称为它的窗口帧。 很多（但不是全部）窗口函数只作用在窗口帧中的行上，而不是整个分区。默认情况下，如果使用ORDER BY，则帧包括从分区开始到当前行的所有行，以及后续任何与当前行在ORDER BY子句上相等的行。如果ORDER BY被忽略，则默认帧包含整个分区中所有的行。    
+    窗口函数只允许出现在查询的SELECT列表和ORDER BY子句中。它们不允许出现在其他地方，例如GROUP BY、HAVING和WHERE子句中。这是因为窗口函数的执行逻辑是在处理完这些子句之后。另外，窗口函数在普通聚集函数之后执行。这意味着可以在窗口函数的参数中包括一个聚集函数，但反过来不行。    
+    如果需要在窗口计算执行后进行过滤或者分组，我们可以使用子查询。    
+    当一个查询涉及到多个窗口函数时，可以将每一个分别写在一个独立的OVER子句中。但如果多个函数要求同一个窗口行为时，这种做法是冗余的而且容易出错的。替代方案是，每一个窗口行为可以被放在一个命名的WINDOW子句中，然后在OVER中引用它。    
+```sql
+SELECT depname, empno, salary,
+       rank() OVER (PARTITION BY depname ORDER BY salary DESC) FROM empsalary;
+--OVER子句形成rank()窗口函数；PARTITION BY将行按depname分组，ORDER BY对每组进行排序，DESC表示降序
+
+--没加ORDER BY
+SELECT salary, sum(salary) OVER () FROM empsalary;
+--结果：
+ salary |  sum
+--------+-------
+   5200 | 47100
+   5000 | 47100
+   3500 | 47100
+   4800 | 47100
+   3900 | 47100
+   4200 | 47100
+   4500 | 47100
+   4800 | 47100
+   6000 | 47100
+   5200 | 47100
+--加入ORDER BY
+SELECT salary, sum(salary) OVER (ORDER BY salary) FROM empsalary;
+--结果：
+ salary |  sum
+--------+-------
+   3500 |  3500
+   3900 |  7400
+   4200 | 11600
+   4500 | 16100
+   4800 | 25700
+   4800 | 25700
+   5000 | 30700
+   5200 | 41100
+   5200 | 41100
+   6000 | 47100
+   
+--使用子查询：
+SELECT depname, empno, salary, enroll_date
+FROM
+  (SELECT depname, empno, salary, enroll_date,
+          rank() OVER (PARTITION BY depname ORDER BY salary DESC, empno) AS pos
+     FROM empsalary
+  ) AS ss
+WHERE pos < 3;
+
+--窗口命名w
+SELECT sum(salary) OVER w, avg(salary) OVER w
+  FROM empsalary
+  WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
+```
+
+- 继承
+
+```sql
+--继承的写法
+CREATE TABLE cities (
+  name       text,
+  population real,
+  altitude   int     -- (in ft)
+);
+
+CREATE TABLE capitals (
+  state      char(2)
+) INHERITS (cities);  --capitals继承至cities
+
+--在这种情况下，一个capitals的行从它的父亲cities继承了所有列（name、population和altitude）。
+--列name的类型是text，一种用于变长字符串的本地PostgreSQL类型。州首都有一个附加列state用于显示它们的州。
+--在PostgreSQL中，一个表可以从0个或者多个表继承。
+
+--查询可以寻找所有海拔500尺以上的城市名称，包括州首都：
+SELECT name, altitude
+  FROM cities
+  WHERE altitude > 500;
+--返回
+   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953
+ Madison   |      845
+
+--查询可以查找所有海拔高于500尺且不是州首府的城市：
+SELECT name, altitude
+    FROM ONLY cities
+    WHERE altitude > 500;
+--返回：
+   name    | altitude
+-----------+----------
+ Las Vegas |     2174
+ Mariposa  |     1953
+```
+    其中cities之前的ONLY用于指示查询只在cities表上进行而不会涉及到继承层次中位于cities之下的其他表。  
+    很多我们已经讨论过的命令 — SELECT、UPDATE 和DELETE — 都支持这个ONLY记号。
