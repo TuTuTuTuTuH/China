@@ -44,22 +44,27 @@ INSERT INTO tablename (name1, name2, name3, name5)  --此行括号内容可缺�
 COPY tablename FROM '/home/user/tablename.txt';
 ```
 
+- 查询一个表
+
+    一个查询可以使用WHERE子句"修饰"，它指定需要哪些行。WHERE子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（AND、OR和NOT）
 ```sql
---查询表
 SELECT * FROM tablename;  --这里*是"所有列"的缩写。等于：
 SELECT name, ..., ... FROM tablename;
 
-SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;  --AS子句是如何给输出列重新命名的（AS子句是可选的）
+SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;  
+--AS子句是如何给输出列重新命名的（AS子句是可选的）
 
 SELECT * FROM weather
-    WHERE city = 'San Francisco' AND prcp > 0.0;  --一个查询可以使用WHERE子句"修饰"，它指定需要哪些行。WHERE子句包含一个布尔（真值）表达式，只有那些使布尔表达式为真的行才会被返回。在条件中可以使用常用的布尔操作符（AND、OR和NOT）
-    
+    WHERE city = 'San Francisco' AND prcp > 0.0;
+
 SELECT * FROM weather
     ORDER BY city;  --ORDER BY为排序
     
 SELECT DISTINCT city
     FROM weather;  --DISTINCT可以查询的结果中消除重复的行
-    
+```
+
+```sql
 --表之间的连接
 --类似于拿 weather表每行的city列和cities表所有行的name列进行比较， 并选取那些在该值上相匹配的行对。但这里只是一个概念上的模型。连接通常以比实际比较每个可能的行对更高效的方式执行
 SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,  
