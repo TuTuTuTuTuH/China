@@ -1,8 +1,13 @@
-# 小计  
+小计
+====
 
 >SQL是对关键字和标识符大小写不敏感的语言，只有在标识符用双引号包围时才能保留它们的大小写。 
+
+SQL语言
+----
+
+* 类型
 ```sql
---类型
 --以下描述仅为猜想，orz
 int  --整型int
 smallint  --短整型short
@@ -15,7 +20,10 @@ time
 timestamp
 interval
 point
+```
 
+* 创建一个新表
+```sql
 --创建表
 CREATE TABLE tablename (
     name       int, --name是列名，int是列的类型，"--"是注释的开头
@@ -24,7 +32,9 @@ CREATE TABLE tablename (
 
 --删除表
 DROP TABLE tablename; 
-
+```
+* 在表中增加行
+```sql
 --插入一行
 INSERT INTO tablename (name1, name2, name3, name5)  --此行括号内容可缺省，加入括号可选择插入哪些列
     VALUES (value1, value2, value3, value5);
@@ -32,7 +42,9 @@ INSERT INTO tablename (name1, name2, name3, name5)  --此行括号内容可缺�
 --从文本文件中装载大量数据
 --源文件的文件名必须在运行后端进程的机器上是可用的， 而不是在客户端上，因为后端进程将直接读取该文件
 COPY tablename FROM '/home/user/tablename.txt';
+```
 
+```sql
 --查询表
 SELECT * FROM tablename;  --这里*是"所有列"的缩写。等于：
 SELECT name, ..., ... FROM tablename;
